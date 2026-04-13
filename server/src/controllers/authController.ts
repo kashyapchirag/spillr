@@ -6,8 +6,9 @@ import jwt from "jsonwebtoken";
 export const SignUp = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
-    if (email) {
-      res.status(409).send({ message: "Account already exists" });
+    const user = await User.findOne({ email });
+    if (user?.email) {
+      return res.status(409).json({ message: "Account already exists" });
     }
 
     // hash the password for security (4 rounds of hashing)
@@ -15,33 +16,38 @@ export const SignUp = async (req: Request, res: Response) => {
 
     await User.create({ name, email, password: hashedPassword });
 
-    res.status(200).send({ message: "Signup was successful" });
+    res.status(200).json({ message: "Signup was successful" });
   } catch (error) {
-    res.status(500).send({ message: "Signup failed", error });
+    res.status(500).json({ message: "Signup failed", error });
   }
 };
 
 export const SignIn = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    if (!email) {
-      res.status(409).send({ message: "email or password is incorrect" });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "email or password is incorrect" });
     }
 
-    const user = await User.findOne({ email });
     const isMatch = await bcrypt.compare(password, user?.password!);
 
-    if (isMatch) {
-      const token = jwt.sign({ userId: user?._id }, process.env.JWT_SECRET);
-
-      res.cookie("token", token, {
-        sameSite: "strict",
-        httpOnly: true,
-      });
-
-      res.status(201).send({ message: "Signed in successfully" });
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ message: "email or password is incorrect" });
     }
+    const token = jwt.sign({ userId: user?._id }, process.env.JWT_SECRET);
+
+    res.cookie("token", token, {
+      sameSite: "strict",
+      httpOnly: true,
+    });
+
+    res.status(201).json({ message: "Signed in successfully" });
   } catch (error) {
-    res.status(500).send({ message: "Signup failed", error });
+    res.status(500).json({ message: "Signup failed", error });
   }
 };

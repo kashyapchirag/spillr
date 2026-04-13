@@ -1,5 +1,9 @@
 const Dashboard = () => {
-  return <div className="bg-black w-full h-screen"></div>;
+  return (
+    <div className="">
+      <div></div>
+    </div>
+  );
 };
 
 export default Dashboard;

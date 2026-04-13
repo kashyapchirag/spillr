@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface inputType {
   name: string;
@@ -25,15 +26,22 @@ const Input = ({ name, value, type, onChange, placeholder }: inputType) => {
 };
 
 const AuthForm = () => {
+  const navigate = useNavigate();
+
   const [mode, setMode] = useState<"SignIn" | "SignUp">("SignUp");
 
   interface formType {
-    name: string;
+    name?: string;
     email: string;
     password: string;
   }
 
-  const [form, setForm] = useState<formType>({
+  const [signInData, setSignInData] = useState<formType>({
+    email: "",
+    password: "",
+  });
+
+  const [signUpData, setSignUpData] = useState<formType>({
     name: "",
     email: "",
     password: "",
@@ -41,20 +49,29 @@ const AuthForm = () => {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev: formType) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+    if (mode === "SignIn") {
+      setSignInData((prev: formType) => {
+        return {
+          ...prev,
+          [name]: value,
+        };
+      });
+    } else {
+      setSignUpData((prev: formType) => {
+        return {
+          ...prev,
+          [name]: value,
+        };
+      });
+    }
   };
 
   const handleSignUp = async () => {
     try {
       const res = await axios.post("/api/signup", {
-        name: form.name,
-        email: form.email,
-        password: form.password,
+        name: signUpData.name,
+        email: signUpData.email,
+        password: signUpData.password,
       });
 
       console.log(res.data.message);
@@ -75,14 +92,15 @@ const AuthForm = () => {
       const res = await axios.post(
         "/api/signin",
         {
-          email: form.email,
-          password: form.password,
+          email: signInData.email,
+          password: signInData.password,
         },
         { withCredentials: true },
       );
 
       console.log(res.data.message);
       toast(res.data.message, { position: "top-center" });
+      navigate("/dashboard");
     } catch (error) {
       if (error instanceof AxiosError) {
         console.log(error.response?.data?.message);
@@ -109,14 +127,14 @@ const AuthForm = () => {
 
           <div className="flex flex-col gap-4">
             <Input
-              value={form.email}
+              value={signInData.email}
               onChange={handleFormChange}
               name="email"
               type="email"
               placeholder="Email"
             />
             <Input
-              value={form.password}
+              value={signInData.password}
               onChange={handleFormChange}
               name="password"
               type="password"
@@ -163,21 +181,21 @@ const AuthForm = () => {
 
           <div className="flex flex-col gap-4">
             <Input
-              value={form.name}
+              value={signUpData.name!}
               onChange={handleFormChange}
               name="name"
               type="text"
               placeholder="Name"
             />
             <Input
-              value={form.email}
+              value={signUpData.email}
               onChange={handleFormChange}
               name="email"
               type="email"
               placeholder="Email"
             />
             <Input
-              value={form.password}
+              value={signUpData.password}
               onChange={handleFormChange}
               name="password"
               type="password"
@@ -207,7 +225,7 @@ const AuthForm = () => {
               }}
               className="text-neutral-100 cursor-pointer"
             >
-              Create account
+              Sign in
             </button>
           </div>
         </>

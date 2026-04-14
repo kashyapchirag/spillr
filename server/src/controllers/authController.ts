@@ -16,7 +16,7 @@ export const SignUp = async (req: Request, res: Response) => {
 
     await User.create({ name, email, password: hashedPassword });
 
-    res.status(200).json({ message: "Signup was successful" });
+    res.status(201).json({ message: "Signup was successful" });
   } catch (error) {
     res.status(500).json({ message: "Signup failed", error });
   }
@@ -46,8 +46,17 @@ export const SignIn = async (req: Request, res: Response) => {
       httpOnly: true,
     });
 
-    res.status(201).json({ message: "Signed in successfully" });
+    res.status(200).json({ message: "Signed in successfully" });
   } catch (error) {
     res.status(500).json({ message: "Signup failed", error });
+  }
+};
+export const SignOut = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("token");
+
+    res.status(200).json({ message: "Signed out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Signout failed", error });
   }
 };
